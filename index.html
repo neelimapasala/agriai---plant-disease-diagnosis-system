@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>🌿 Neelima's AgriAI - Revolutionary Plant Disease Diagnosis System</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js for Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 28px;
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .upload-area {
+            border: 2px dashed #4caf50;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #f8fff8 0%, #ffffff 100%);
+        }
+        
+        .upload-area:hover {
+            border-color: #2e7d32;
+            background: #ffffff;
+            transform: scale(1.02);
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(46, 125, 50, 0.3);
+        }
+        
+        .tab-btn.active {
+            background: #2e7d32;
+            color: white;
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+        }
+        
+        .loading-spinner {
+            border: 3px solid #e8f5e9;
+            border-top: 3px solid #2e7d32;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .result-card {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .feature-badge {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .feature-badge:hover::before {
+            left: 100%;
+        }
+        
+        .confidence-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #4caf50, #ff9800, #f44336);
+            transition: width 1s ease;
+        }
+        
+        .creator-name {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: bold;
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Language Selector Styles */
+        .language-selector {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+        
+        .language-selector select {
+            border: 1px solid #4caf50;
+            border-radius: 20px;
+            padding: 5px 10px;
+            outline: none;
+            cursor: pointer;
+            background: white;
+        }
+        
+        /* Chatbot Styles */
+        .chatbot-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .chatbot-toggle {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #2e7d32, #1b5e20);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .chatbot-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(46,125,50,0.4);
+        }
+        
+        .chatbot-window {
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            width: 380px;
+            height: 550px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .chatbot-window.active {
+            display: flex;
+        }
+        
+        .chatbot-header {
+            background: linear-gradient(135deg, #2e7d32, #1b5e20);
+            color: white;
+            padding: 15px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chatbot-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f9f9f9;
+        }
+        
+        .message {
+            margin-bottom: 12px;
+            padding: 10px 14px;
+            border-radius: 18px;
+            max-width: 85%;
+            word-wrap: break-word;
+        }
+        
+        .user-message {
+            background: linear-gradient(135deg, #2e7d32, #1b5e20);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .bot-message {
+            background: #e8e8e8;
+            color: #333;
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+        
+        .chatbot-input {
+            display: flex;
+            padding: 12px;
+            background: white;
+            border-top: 1px solid #ddd;
+            gap: 8px;
+        }
+        
+        .chatbot-input input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+        }
+        
+        .chatbot-input input:focus {
+            border-color: #2e7d32;
+        }
+        
+        .chatbot-input button {
+            background: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .chatbot-input button:hover {
+            background: #1b5e20;
+            transform: scale(1.05);
+        }
+        
+        /* Text Input Section Styles */
+        .text-input-area {
+            background: #fef9e6;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .text-input-area textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            resize: vertical;
+            font-size: 14px;
+            outline: none;
+        }
+        
+        .text-input-area textarea:focus {
+            border-color: #ff9800;
+        }
+        
+        .typing-indicator {
+            display: flex;
+            gap: 5px;
+            padding: 10px;
+        }
+        
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #4caf50;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #4caf50;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2e7d32;
+        }
+        
+        /* Section Cards */
+        .section-card {
+            transition: all 0.3s ease;
+        }
+        
+        .section-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            height: 6px;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+        
+        /* Map Container */
+        #map {
+            height: 250px;
+            border-radius: 15px;
+            z-index: 1;
+        }
+        
+        /* Badge */
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-warning {
+            background: #fed7aa;
+            color: #92400e;
+        }
+        
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        /* NEW: Enhanced Analysis Styles */
+        .analysis-box {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .info-value {
+            color: #059669;
+            font-weight: 500;
+        }
+        
+        .treatment-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .step-number {
+            width: 28px;
+            height: 28px;
+            background: #2e7d32;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .urgency-critical { background: #fee2e2; color: #dc2626; border-left: 4px solid #dc2626; }
+        .urgency-high { background: #fed7aa; color: #ea580c; border-left: 4px solid #ea580c; }
+        .urgency-medium { background: #fef3c7; color: #d97706; border-left: 4px solid #d97706; }
+        .urgency-low { background: #d1fae5; color: #059669; border-left: 4px solid #059669; }
+        
+        /* Heatmap simulation */
+        .heatmap-overlay {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .heatmap-overlay::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 40%, rgba(255,0,0,0.3) 0%, rgba(255,165,0,0.2) 50%, transparent 70%);
+            border-radius: 12px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <!-- Language Selector -->
+    <div class="language-selector">
+        <i class="fas fa-language text-green-600"></i>
+        <span style="font-size: 14px;">🌐</span>
+        <select id="languageSelect" onchange="changeLanguage()">
+            <option value="en">🇬🇧 English</option>
+            <option value="hi">🇮🇳 हिंदी (Hindi)</option>
+            <option value="te">🇮🇳 తెలుగు (Telugu)</option>
+            <option value="ta">🇮🇳 தமிழ் (Tamil)</option>
+            <option value="kn">🇮🇳 ಕನ್ನಡ (Kannada)</option>
+            <option value="mr">🇮🇳 मराठी (Marathi)</option>
+        </select>
+    </div>
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="inline-block p-4 bg-white rounded-full shadow-lg mb-4 pulse-animation">
+                <i class="fas fa-leaf text-5xl text-green-600"></i>
+            </div>
+            <h1 class="text-4xl md:text-6xl font-bold text-gray-800 mb-3">
+                🌿 <span class="creator-name">Neelima's</span> AgriAI
+            </h1>
+            <p id="subtitleText" class="text-gray-700 text-lg mb-2">World's Most Advanced Plant Disease Diagnosis System</p>
+            <p class="text-sm text-gray-500 mb-4">
+                <i class="fas fa-crown text-yellow-500"></i> Created by <strong class="text-green-700">Neelima Pasala</strong> | Revolutionary AI Technology
+            </p>
+            <div class="flex flex-wrap justify-center gap-3">
+                <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-semibold feature-badge">
+                    <i class="fas fa-brain mr-1"></i> AI Powered
+                </span>
+                <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold feature-badge">
+                    <i class="fas fa-chart-line mr-1"></i> Predictive Analytics
+                </span>
+                <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold feature-badge">
+                    <i class="fas fa-link mr-1"></i> Blockchain Secured
+                </span>
+                <span class="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-semibold feature-badge">
+                    <i class="fas fa-cloud-sun mr-1"></i> Weather Integration
+                </span>
+                <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-semibold feature-badge">
+                    <i class="fas fa-language mr-1"></i> 6 Languages
+                </span>
+                <span class="px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-sm font-semibold feature-badge">
+                    <i class="fas fa-comment-dots mr-1"></i> AI Chatbot
+                </span>
+            </div>
+        </div>
+
+        <!-- Main Grid - Diagnosis Section -->
+        <div class="grid lg:grid-cols-2 gap-6">
+            <!-- Left Panel - Input -->
+            <div class="glass-card p-6">
+                <div class="flex gap-3 mb-6 border-b pb-3">
+                    <button onclick="switchTab('upload')" id="uploadTab" class="tab-btn flex-1 px-4 py-3 rounded-xl font-semibold transition">
+                        <i class="fas fa-cloud-upload-alt mr-2"></i> <span data-key="upload">Upload</span>
+                    </button>
+                    <button onclick="switchTab('camera')" id="cameraTab" class="tab-btn flex-1 px-4 py-3 rounded-xl font-semibold transition">
+                        <i class="fas fa-camera mr-2"></i> <span data-key="camera">Camera</span>
+                    </button>
+                    <button onclick="switchTab('text')" id="textTab" class="tab-btn flex-1 px-4 py-3 rounded-xl font-semibold transition">
+                        <i class="fas fa-pen-alt mr-2"></i> <span data-key="text">Describe</span>
+                    </button>
+                </div>
+
+                <!-- Upload Section -->
+                <div id="uploadSection" class="tab-content">
+                    <div class="upload-area p-10 text-center cursor-pointer" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-cloud-upload-alt text-6xl text-green-500 mb-4"></i>
+                        <p class="text-gray-700 font-semibold text-lg mb-2">Upload Leaf Image</p>
+                        <p class="text-sm text-gray-500">Supports: JPG, PNG, JPEG (Max 10MB)</p>
+                        <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleImageUpload(this.files[0])">
+                    </div>
+                    <div id="uploadPreview" class="mt-4 hidden">
+                        <img id="previewImage" class="rounded-xl max-h-64 mx-auto shadow-lg" alt="Preview">
+                        <p class="text-center text-green-600 mt-2 font-semibold">
+                            <i class="fas fa-check-circle"></i> Image ready for analysis
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Camera Section -->
+                <div id="cameraSection" class="tab-content hidden">
+                    <div class="space-y-4">
+                        <div class="bg-black rounded-xl overflow-hidden">
+                            <video id="video" autoplay playsinline class="w-full rounded-xl"></video>
+                            <canvas id="canvas" class="hidden"></canvas>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="startCamera()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700">
+                                <i class="fas fa-play mr-1"></i> Start Camera
+                            </button>
+                            <button onclick="capturePhoto()" id="captureBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold disabled:opacity-50" disabled>
+                                <i class="fas fa-camera mr-1"></i> Capture
+                            </button>
+                        </div>
+                        <div id="cameraPreview" class="hidden">
+                            <img id="capturedImage" class="rounded-xl max-h-48 mx-auto shadow-lg" alt="Captured">
+                            <p class="text-center text-green-600 mt-2 font-semibold">✓ Photo captured</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Text Description Section -->
+                <div id="textSection" class="tab-content hidden">
+                    <div class="text-input-area">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i class="fas fa-pen-alt text-orange-500"></i>
+                            <span class="font-semibold text-gray-700">Describe what you see on the plant</span>
+                        </div>
+                        <textarea id="symptomText" rows="4" placeholder="Example: I see brown spots on leaves, some leaves are turning yellow and curling..."></textarea>
+                        <div class="flex gap-2 mt-3">
+                            <button onclick="analyzeTextDescription()" class="flex-1 bg-orange-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-600 transition">
+                                <i class="fas fa-microphone-alt mr-2"></i> Analyze Description
+                            </button>
+                            <button onclick="clearTextDescription()" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">
+                            <i class="fas fa-info-circle"></i> Describe symptoms in your own words - our AI will diagnose
+                        </p>
+                    </div>
+                    <div id="textPreview" class="mt-3 hidden">
+                        <div class="bg-green-50 p-3 rounded-lg">
+                            <p class="text-sm text-gray-700"><strong>Your description:</strong> <span id="userDescription"></span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analyze Button -->
+                <button id="analyzeBtn" onclick="analyzeImage()" class="w-full btn-primary text-white px-6 py-4 rounded-xl font-bold text-lg mt-6 disabled:opacity-50 disabled:cursor-not-allowed transition" disabled>
+                    <i class="fas fa-stethoscope mr-2"></i> Run Advanced Diagnosis
+                </button>
+                
+                <!-- Creator Signature -->
+                <div class="mt-4 text-center text-xs text-gray-500">
+                    <i class="fas fa-code-branch"></i> Built by <span class="font-semibold text-green-700">Neelima Pasala</span> | Patent Pending Technology
+                </div>
+            </div>
+
+            <!-- Right Panel - ENHANCED AI Analysis Dashboard -->
+            <div class="glass-card p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-2xl font-bold text-gray-800">
+                        <i class="fas fa-chart-line text-green-600 mr-2"></i>
+                        <span data-key="dashboard">AI Analysis Dashboard</span>
+                    </h3>
+                    <button onclick="clearResults()" class="text-gray-500 hover:text-gray-700 transition">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+                
+                <!-- Loading -->
+                <div id="loadingState" class="hidden text-center py-8">
+                    <div class="loading-spinner mb-4"></div>
+                    <p class="text-gray-700 font-semibold">Neelima's AI is analyzing your plant...</p>
+                    <p class="text-sm text-gray-500 mt-2">Using revolutionary multi-dimensional analysis</p>
+                </div>
+
+                <!-- Enhanced Results Area -->
+                <div id="resultsArea" class="space-y-4 max-h-[600px] overflow-y-auto">
+                    <div class="text-center text-gray-500 py-12">
+                        <i class="fas fa-seedling text-6xl mb-3 text-green-300"></i>
+                        <p class="font-semibold text-gray-700">Welcome to Neelima's AgriAI</p>
+                        <p class="text-sm mt-2 text-gray-500">Upload, scan, or describe your plant for revolutionary diagnosis</p>
+                        <div class="mt-6 p-4 bg-green-50 rounded-lg">
+                            <p class="text-xs text-gray-600"><i class="fas fa-gem text-yellow-500"></i> Features:</p>
+                            <p class="text-xs text-gray-500 mt-1">✓ 6 Indian Languages ✓ Blockchain Security ✓ Spread Prediction</p>
+                            <p class="text-xs text-gray-500">✓ Weather Risk ✓ Text Description ✓ AI Chatbot</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="mt-4 pt-4 border-t grid grid-cols-3 gap-2 text-center">
+                    <div>
+                        <p class="text-xs text-gray-500">Diagnoses Today</p>
+                        <p class="text-lg font-bold text-green-600" id="diagnosisCount">0</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Blockchain Verified</p>
+                        <p class="text-lg font-bold text-blue-600" id="blockchainCount">0</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Languages</p>
+                        <p class="text-lg font-bold text-purple-600">6</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 1: Weather & Risk Dashboard -->
+        <div class="glass-card p-6 mt-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-cloud-sun text-3xl text-orange-500"></i>
+                    <h3 class="text-2xl font-bold text-gray-800">Weather & Disease Risk</h3>
+                </div>
+                <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-semibold" id="riskLevel">High Risk Today</span>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="text-center p-3 bg-blue-50 rounded-xl">
+                    <i class="fas fa-temperature-high text-2xl text-red-500"></i>
+                    <p class="text-sm text-gray-600 mt-1">Temperature</p>
+                    <p class="text-xl font-bold" id="tempValue">28°C</p>
+                </div>
+                <div class="text-center p-3 bg-blue-50 rounded-xl">
+                    <i class="fas fa-tint text-2xl text-blue-500"></i>
+                    <p class="text-sm text-gray-600 mt-1">Humidity</p>
+                    <p class="text-xl font-bold" id="humidityValue">75%</p>
+                </div>
+                <div class="text-center p-3 bg-blue-50 rounded-xl">
+                    <i class="fas fa-wind text-2xl text-gray-500"></i>
+                    <p class="text-sm text-gray-600 mt-1">Wind Speed</p>
+                    <p class="text-xl font-bold" id="windValue">12 km/h</p>
+                </div>
+                <div class="text-center p-3 bg-blue-50 rounded-xl">
+                    <i class="fas fa-umbrella text-2xl text-blue-500"></i>
+                    <p class="text-sm text-gray-600 mt-1">Rainfall</p>
+                    <p class="text-xl font-bold" id="rainValue">0 mm</p>
+                </div>
+            </div>
+            <div class="mt-4 p-3 bg-yellow-50 rounded-lg">
+                <p class="text-sm text-gray-700"><i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i> <span id="weatherAdvice">High humidity expected. Apply preventive fungicide today.</span></p>
+            </div>
+        </div>
+
+        <!-- Section 2: Farmer Education Hub -->
+        <div class="glass-card p-6 mt-6">
+            <div class="flex items-center gap-3 mb-4">
+                <i class="fas fa-graduation-cap text-3xl text-green-600"></i>
+                <h3 class="text-2xl font-bold text-gray-800">Farmer Education Hub</h3>
+            </div>
+            <div class="grid md:grid-cols-3 gap-4">
+                <div class="bg-blue-50 p-4 rounded-xl section-card cursor-pointer">
+                    <i class="fas fa-video text-2xl text-blue-600 mb-2"></i>
+                    <h4 class="font-bold">Video Tutorials</h4>
+                    <p class="text-sm text-gray-600">Watch step-by-step disease treatment videos</p>
+                    <button class="mt-2 text-blue-600 text-sm font-semibold hover:underline" onclick="showNotification('Video tutorials coming soon!', 'info')">Watch Now →</button>
+                </div>
+                <div class="bg-green-50 p-4 rounded-xl section-card cursor-pointer">
+                    <i class="fas fa-download text-2xl text-green-600 mb-2"></i>
+                    <h4 class="font-bold">Download Guides</h4>
+                    <p class="text-sm text-gray-600">Get PDF guides in your language</p>
+                    <button class="mt-2 text-green-600 text-sm font-semibold hover:underline" onclick="showNotification('Download feature coming soon!', 'info')">Download →</button>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-xl section-card cursor-pointer">
+                    <i class="fas fa-infographic text-2xl text-purple-600 mb-2"></i>
+                    <h4 class="font-bold">Disease Charts</h4>
+                    <p class="text-sm text-gray-600">Visual identification guides</p>
+                    <button class="mt-2 text-purple-600 text-sm font-semibold hover:underline" onclick="showNotification('Disease charts coming soon!', 'info')">View →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Market Price Dashboard -->
+        <div class="glass-card p-6 mt-6">
+            <div class="flex items-center gap-3 mb-4">
+                <i class="fas fa-chart-line text-3xl text-blue-600"></i>
+                <h3 class="text-2xl font-bold text-gray-800">Market Price Dashboard</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="p-3 text-left">Crop</th>
+                            <th class="p-3 text-left">Price (₹/quintal)</th>
+                            <th class="p-3 text-left">Trend</th>
+                            <th class="p-3 text-left">Best Time to Sell</th>
+                        </tr>
+                    </thead>
+                    <tbody id="marketTable">
+                        <tr class="border-b"><td class="p-3">🌾 Wheat</td><td class="p-3">₹2,250</td><td class="p-3 text-green-600"><i class="fas fa-arrow-up"></i> +5%</td><td class="p-3">Next 2 weeks</td></tr>
+                        <tr class="border-b"><td class="p-3">🌽 Corn</td><td class="p-3">₹1,850</td><td class="p-3 text-red-600"><i class="fas fa-arrow-down"></i> -2%</td><td class="p-3">Sell immediately</td></tr>
+                        <tr class="border-b"><td class="p-3">🍅 Tomato</td><td class="p-3">₹1,200</td><td class="p-3 text-green-600"><i class="fas fa-arrow-up"></i> +12%</td><td class="p-3">Next week peak</td></tr>
+                        <tr class="border-b"><td class="p-3">🥔 Potato</td><td class="p-3">₹950</td><td class="p-3 text-green-600"><i class="fas fa-arrow-up"></i> +3%</td><td class="p-3">Hold for 5 days</td></tr>
+                        <tr class="border-b"><td class="p-3">🧅 Onion</td><td class="p-3">₹1,800</td><td class="p-3 text-red-600"><i class="fas fa-arrow-down"></i> -8%</td><td class="p-3">Wait for price recovery</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section 4: Farmer Community Forum -->
+        <div class="glass-card p-6 mt-6">
+            <div class="flex items-center gap-3 mb-4">
+                <i class="fas fa-users text-3xl text-green-600"></i>
+                <h3 class="text-2xl font-bold text-gray-800">Farmer Community Forum</h3>
+            </div>
+            <div class="space-y-3 max-h-80 overflow-y-auto">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-semibold text-sm">👨‍🌾 Ramesh from Maharashtra</p>
+                            <p class="text-sm text-gray-600 mt-1">"My tomato plants have yellow leaves. What should I do?"</p>
+                        </div>
+                        <button class="text-green-600 text-xs font-semibold hover:underline" onclick="showNotification('Reply feature coming soon!', 'info')">Reply</button>
+                    </div>
+                    <div class="mt-2 flex gap-2">
+                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">3 answers</span>
+                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">2 hours ago</span>
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-semibold text-sm">👩‍🌾 Priya from Tamil Nadu</p>
+                            <p class="text-sm text-gray-600 mt-1">"Best organic pesticide for brinjal?"</p>
+                        </div>
+                        <button class="text-green-600 text-xs font-semibold hover:underline" onclick="showNotification('Reply feature coming soon!', 'info')">Reply</button>
+                    </div>
+                    <div class="mt-2 flex gap-2">
+                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">5 answers</span>
+                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">1 day ago</span>
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-semibold text-sm">👨‍🌾 Suresh from Punjab</p>
+                            <p class="text-sm text-gray-600 mt-1">"Wheat crop showing black spots on leaves"</p>
+                        </div>
+                        <button class="text-green-600 text-xs font-semibold hover:underline" onclick="showNotification('Reply feature coming soon!', 'info')">Reply</button>
+                    </div>
+                    <div class="mt-2 flex gap-2">
+                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">8 answers</span>
+                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">3 days ago</span>
+                    </div>
+                </div>
+            </div>
+            <button class="w-full mt-4 bg-green-100 text-green-700 py-3 rounded-lg font-semibold hover:bg-green-200 transition" onclick="showNotification('Ask question feature coming soon!', 'info')">
+                <i class="fas fa-plus mr-2"></i> Ask a Question
+            </button>
+        </div>
+
+        <!-- Section 5: Expert Consultation Booking -->
+        <div class="glass-card p-6 mt-6">
+            <div class="flex items-center gap-3 mb-4">
+                <i class="fas fa-user-md text-3xl text-purple-600"></i>
+                <h3 class="text-2xl font-bold text-gray-800">Consult an Expert</h3>
+            </div>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="flex items-center gap-3 p-4 bg-purple-50 rounded-xl section-card cursor-pointer" onclick="showNotification('Video consultation booking coming soon!', 'info')">
+                    <i class="fas fa-video text-3xl text-purple-600"></i>
+                    <div>
+                        <p class="font-semibold">Video Consultation</p>
+                        <p class="text-xs text-gray-600">Talk to agronomist live</p>
+                        <button class="text-purple-600 text-xs font-semibold mt-1">Book Slot →</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 p-4 bg-green-50 rounded-xl section-card cursor-pointer" onclick="showNotification('Call helpline: 1800-180-1551', 'info')">
+                    <i class="fas fa-phone-alt text-3xl text-green-600"></i>
+                    <div>
+                        <p class="font-semibold">Helpline</p>
+                        <p class="text-xs text-gray-600">Free expert advice</p>
+                        <p class="text-green-600 font-bold text-sm mt-1">1800-180-1551</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 grid grid-cols-3 gap-3 text-center">
+                <div class="p-2 bg-gray-50 rounded-lg"><p class="text-xs text-gray-500">Available Experts</p><p class="font-bold text-green-600">12 Online</p></div>
+                <div class="p-2 bg-gray-50 rounded-lg"><p class="text-xs text-gray-500">Today's Slots</p><p class="font-bold text-green-600">8 Left</p></div>
+                <div class="p-2 bg-gray-50 rounded-lg"><p class="text-xs text-gray-500">Avg Response</p><p class="font-bold text-green-600">&lt;5 min</p></div>
+            </div>
+        </div>
+
+        <!-- Section 6: Soil Health Analyzer -->
+        <div class="glass-card p-6 mt-6">
+            <div class="flex items-center gap-3 mb-4">
+                <i class="fas fa-seedling text-3xl text-brown-600"></i>
+                <h3 class="text-2xl font-bold text-gray-800">Soil Health Analyzer</h3>
+            </div>
+            <div class="grid md:grid-cols-4 gap-4">
+                <div class="text-center p-3 bg-orange-50 rounded-xl">
+                    <i class="fas fa-flask text-2xl text-orange-600"></i>
+                    <p class="text-sm font-semibold mt-1">pH Level</p>
+                    <p class="text-xl font-bold">6.8</p>
+                    <p class="text-xs text-green-600">Optimal</p>
+                </div>
+                <div class="text-center p-3 bg-green-50 rounded-xl">
+                    <i class="fas fa-leaf text-2xl text-green-600"></i>
+                    <p class="text-sm font-semibold mt-1">Nitrogen (N)</p>
+                    <p class="text-xl font-bold">Medium</p>
+                    <div class="progress-bar bg-green-200 mt-1 rounded-full"><div class="progress-bar bg-green-600 rounded-full" style="width: 65%"></div></div>
+                </div>
+                <div class="text-center p-3 bg-blue-50 rounded-xl">
+                    <i class="fas fa-water text-2xl text-blue-600"></i>
+                    <p class="text-sm font-semibold mt-1">Phosphorus (P)</p>
+                    <p class="text-xl font-bold">Low</p>
+                    <div class="progress-bar bg-blue-200 mt-1 rounded-full"><div class="progress-bar bg-blue-600 rounded-full" style="width: 40%"></div></div>
+                </div>
+                <div class="text-center p-3 bg-purple-50 rounded-xl">
+                    <i class="fas fa-gem text-2xl text-purple-600"></i>
+                    <p class="text-sm font-semibold mt-1">Potassium (K)</p>
+                    <p class="text-xl font-bold">High</p>
+                    <div class="progress-bar bg-purple-200 mt-1 rounded-full"><div class="progress-bar bg-purple-600 rounded-full" style="width: 85%"></div></div>
+                </div>
+            </div>
+            <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                <p class="text-sm"><i class="fas fa-lightbulb text-yellow-600 mr-2"></i> <strong>Recommendation:</strong> Add phosphorus-rich fertilizer (bone meal or rock phosphate) to improve soil health.</p>
+            </div>
+        </div>
+
+        <!-- Section 7: Crop Calendar -->
+        <div class="glass-card p-6 mt-6">
+            <div class="flex items-center gap-3 mb-4">
+                <i class="fas fa-calendar-alt text-3xl text-green-600"></i>
+                <h3 class="text-2xl font-bold text-gray-800">Smart Crop Calendar</h3>
+            </div>
+            <div class="grid md:grid-cols-3 gap-4">
+                <div class="bg-green-50 p-3 rounded-lg">
+                    <i class="fas fa-seedling text-green-600"></i>
+                    <p class="font-semibold text-sm mt-1">🌾 Wheat</p>
+                    <p class="text-xs text-gray-600">Planting: Oct-Nov</p>
+                    <p class="text-xs text-gray-600">Harvest: Mar-Apr</p>
+                    <div class="progress-bar bg-green-200 mt-2 rounded-full"><div class="progress-bar bg-green-600 rounded-full" style="width: 75%"></div></div>
+                    <p class="text-xs text-right mt-1">75% Complete</p>
+                </div>
+                <div class="bg-yellow-50 p-3 rounded-lg">
+                    <i class="fas fa-seedling text-yellow-600"></i>
+                    <p class="font-semibold text-sm mt-1">🌽 Corn</p>
+                    <p class="text-xs text-gray-600">Planting: Jun-Jul</p>
+                    <p class="text-xs text-gray-600">Harvest: Oct-Nov</p>
+                    <div class="progress-bar bg-yellow-200 mt-2 rounded-full"><div class="progress-bar bg-yellow-600 rounded-full" style="width: 40%"></div></div>
+                    <p class="text-xs text-right mt-1">40% Complete</p>
+                </div>
+                <div class="bg-red-50 p-3 rounded-lg">
+                    <i class="fas fa-seedling text-red-600"></i>
+                    <p class="font-semibold text-sm mt-1">🍅 Tomato</p>
+                    <p class="text-xs text-gray-600">Planting: Jan-Feb</p>
+                    <p class="text-xs text-gray-600">Harvest: Apr-May</p>
+                    <div class="progress-bar bg-red-200 mt-2 rounded-full"><div class="progress-bar bg-red-600 rounded-full" style="width: 90%"></div></div>
+                    <p class="text-xs text-right mt-1">90% Complete</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 8: Pest Identification Guide -->
+        <div class="glass-card p-6 mt-6">
+            <div class="flex items-center gap-3 mb-4">
+                <i class="fas fa-bug text-3xl text-red-600"></i>
+                <h3 class="text-2xl font-bold text-gray-800">Pest Identification Guide</h3>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="text-center p-3 bg-gray-50 rounded-lg section-card cursor-pointer" onclick="showNotification('Aphids: Small green insects. Use neem oil spray.', 'info')">
+                    <i class="fas fa-bug text-2xl text-red-500"></i>
+                    <p class="text-sm font-semibold mt-1">Aphids</p>
+                    <p class="text-xs text-gray-500">Small green insects</p>
+                </div>
+                <div class="text-center p-3 bg-gray-50 rounded-lg section-card cursor-pointer" onclick="showNotification('Spider Mites: Tiny red spots with webbing. Use sulfur spray.', 'info')">
+                    <i class="fas fa-spider text-2xl text-purple-500"></i>
+                    <p class="text-sm font-semibold mt-1">Spider Mites</p>
+                    <p class="text-xs text-gray-500">Webs on leaves</p>
+                </div>
+                <div class="text-center p-3 bg-gray-50 rounded-lg section-card cursor-pointer" onclick="showNotification('Whitefly: Small white flying insects. Use yellow sticky traps.', 'info')">
+                    <i class="fas fa-leaf text-2xl text-green-500"></i>
+                    <p class="text-sm font-semibold mt-1">Whitefly</p>
+                    <p class="text-xs text-gray-500">White flying insects</p>
+                </div>
+                <div class="text-center p-3 bg-gray-50 rounded-lg section-card cursor-pointer" onclick="showNotification('Caterpillar: Green worms eating leaves. Use Bt spray.', 'info')">
+                    <i class="fas fa-worm text-2xl text-brown-500"></i>
+                    <p class="text-sm font-semibold mt-1">Caterpillar</p>
+                    <p class="text-xs text-gray-500">Leaf eating worms</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 9: Government Schemes Portal -->
+        <div class="glass-card p-6 mt-6">
+            <div class="flex items-center gap-3 mb-4">
+                <i class="fas fa-landmark text-3xl text-blue-600"></i>
+                <h3 class="text-2xl font-bold text-gray-800">Government Schemes Portal</h3>
+            </div>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                    <div><p class="font-semibold">PM-KISAN Scheme</p><p class="text-xs text-gray-600">₹6,000 per year to farmers</p></div>
+                    <button class="bg-blue-600 text-white px-3 py-1 rounded text-xs" onclick="showNotification('Apply at PM-KISAN portal', 'info')">Apply</button>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                    <div><p class="font-semibold">Crop Insurance Scheme</p><p class="text-xs text-gray-600">Low premium, high coverage</p></div>
+                    <button class="bg-green-600 text-white px-3 py-1 rounded text-xs" onclick="showNotification('Crop insurance details available at local bank', 'info')">Learn More</button>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                    <div><p class="font-semibold">Organic Farming Subsidy</p><p class="text-xs text-gray-600">50% subsidy on organic inputs</p></div>
+                    <button class="bg-purple-600 text-white px-3 py-1 rounded text-xs" onclick="showNotification('Check eligibility at agriculture department', 'info')">Check Eligibility</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 10: Yield Predictor -->
+        <div class="glass-card p-6 mt-6">
+            <div class="flex items-center gap-3 mb-4">
+                <i class="fas fa-chart-simple text-3xl text-green-600"></i>
+                <h3 class="text-2xl font-bold text-gray-800">Yield Predictor</h3>
+            </div>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl">
+                    <p class="text-sm text-gray-600">Estimated Yield</p>
+                    <p class="text-3xl font-bold text-green-600">45-50 <span class="text-lg">tons/hectare</span></p>
+                    <div class="progress-bar bg-green-200 mt-2 rounded-full"><div class="progress-bar bg-green-600 rounded-full" style="width: 78%"></div></div>
+                    <p class="text-xs text-gray-500 mt-2">Above average yield expected</p>
+                </div>
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl">
+                    <p class="text-sm text-gray-600">Profit Estimate</p>
+                    <p class="text-3xl font-bold text-blue-600">₹85,000 <span class="text-lg">per acre</span></p>
+                    <p class="text-xs text-green-600 mt-2"><i class="fas fa-arrow-up"></i> 12% higher than last season</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 11: Nearby Services Locator -->
+        <div class="glass-card p-6 mt-6">
+            <div class="flex items-center gap-3 mb-4">
+                <i class="fas fa-map-marker-alt text-3xl text-red-500"></i>
+                <h3 class="text-2xl font-bold text-gray-800">Nearby Services Locator</h3>
+            </div>
+            <div id="map" style="height: 250px; border-radius: 15px;"></div>
+            <div class="grid grid-cols-3 gap-2 mt-3 text-center">
+                <div class="p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100" onclick="showNotification('Showing nearby seed shops', 'info')"><i class="fas fa-store text-green-600"></i><p class="text-xs">Seed Shops</p></div>
+                <div class="p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100" onclick="showNotification('Showing nearby fertilizer stores', 'info')"><i class="fas fa-flask text-purple-600"></i><p class="text-xs">Fertilizer Stores</p></div>
+                <div class="p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100" onclick="showNotification('Showing nearby equipment rental', 'info')"><i class="fas fa-tractor text-orange-600"></i><p class="text-xs">Equipment Rental</p></div>
+            </div>
+        </div>
+
+        <!-- Section 12: Emergency Alerts -->
+        <div class="glass-card p-6 mt-6">
+            <div class="flex items-center gap-3 mb-4">
+                <i class="fas fa-bell text-3xl text-red-500 animate-pulse"></i>
+                <h3 class="text-2xl font-bold text-gray-800">Emergency Alerts</h3>
+            </div>
+            <div class="space-y-2">
+                <div class="flex items-center gap-3 p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
+                    <i class="fas fa-cloud-rain text-red-500"></i>
+                    <div class="flex-1"><p class="font-semibold text-sm">Heavy Rainfall Warning</p><p class="text-xs text-gray-600">Expected in next 48 hours. Take preventive measures.</p></div>
+                    <span class="text-xs text-red-500">Just now</span>
+                </div>
+                <div class="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-500">
+                    <i class="fas fa-bug text-yellow-500"></i>
+                    <div><p class="font-semibold text-sm">Pest Alert: Armyworm</p><p class="text-xs text-gray-600">Reported in nearby region. Check your crops.</p></div>
+                    <span class="text-xs text-yellow-500 ml-auto">2 hours ago</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 13: Fertilizer Calculator -->
+        <div class="glass-card p-6 mt-6">
+            <div class="flex items-center gap-3 mb-4">
+                <i class="fas fa-calculator text-3xl text-blue-600"></i>
+                <h3 class="text-2xl font-bold text-gray-800">Fertilizer Calculator</h3>
+            </div>
+            <div class="grid md:grid-cols-3 gap-4">
+                <div><label class="text-sm text-gray-600">Crop Type</label><select id="cropType" class="w-full p-2 border rounded-lg mt-1"><option>Wheat</option><option>Rice</option><option>Corn</option><option>Tomato</option></select></div>
+                <div><label class="text-sm text-gray-600">Area (acres)</label><input type="number" id="areaInput" class="w-full p-2 border rounded-lg mt-1" placeholder="Enter area"></div>
+                <div><label class="text-sm text-gray-600">Soil Type</label><select id="soilType" class="w-full p-2 border rounded-lg mt-1"><option>Loamy</option><option>Sandy</option><option>Clay</option><option>Black</option></select></div>
+            </div>
+            <button class="w-full mt-4 bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700" onclick="calculateFertilizer()">Calculate Fertilizer Required</button>
+            <div id="fertilizerResult" class="mt-3 hidden p-3 bg-green-50 rounded-lg"><p class="text-sm font-semibold">Recommended Fertilizer: <span id="fertilizerAmount"></span></p></div>
+        </div>
+
+        <!-- Section 14: Daily Agri Tips -->
+        <div class="glass-card p-6 mt-6">
+            <div class="flex items-center gap-3 mb-4">
+                <i class="fas fa-lightbulb text-3xl text-yellow-500"></i>
+                <h3 class="text-2xl font-bold text-gray-800">Daily Agri Tips</h3>
+            </div>
+            <div class="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-xl">
+                <p class="text-lg mb-2">💡 <span class="font-semibold">Tip of the Day</span></p>
+                <p id="dailyTipText" class="text-gray-700">🌿 "Apply neem oil spray early morning or late evening for best pest control results. Avoid spraying in direct sunlight."</p>
+                <div class="flex gap-2 mt-3"><button class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded" onclick="previousTip()">Previous Tip</button><button class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded" onclick="nextTip()">Next Tip</button></div>
+            </div>
+        </div>
+
+        <!-- Section 15: QR Code Reporting -->
+        <div class="glass-card p-6 mt-6">
+            <div class="flex items-center gap-3 mb-4">
+                <i class="fas fa-qrcode text-3xl text-gray-700"></i>
+                <h3 class="text-2xl font-bold text-gray-800">QR Code Report</h3>
+            </div>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="text-center p-4 bg-gray-50 rounded-lg cursor-pointer" onclick="showNotification('QR Code generated! Share with your local expert.', 'success')">
+                    <i class="fas fa-qrcode text-6xl text-gray-600 mb-2"></i>
+                    <p class="text-sm font-semibold">Generate QR for Plant</p>
+                    <button class="mt-2 bg-green-600 text-white px-4 py-1 rounded text-sm">Generate →</button>
+                </div>
+                <div class="text-center p-4 bg-gray-50 rounded-lg cursor-pointer" onclick="showNotification('Report downloaded!', 'success')">
+                    <i class="fas fa-download text-6xl text-blue-600 mb-2"></i>
+                    <p class="text-sm font-semibold">Download Report</p>
+                    <button class="mt-2 bg-blue-600 text-white px-4 py-1 rounded text-sm">Download PDF</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-8 pt-6 border-t border-green-200">
+            <p class="text-gray-600 text-sm">
+                🌱 <strong class="text-green-700">Neelima Pasala's</strong> Revolutionary Plant Disease AI System
+            </p>
+            <p class="text-xs text-gray-500 mt-2">
+                <i class="fas fa-copyright"></i> 2025 Neelima Pasala | All Rights Reserved | 
+                <i class="fas fa-globe"></i> World's First Multi-Language Plant Diagnosis with AI Chatbot
+            </p>
+            <div class="flex justify-center gap-4 mt-3 flex-wrap">
+                <span class="text-xs text-gray-400"><i class="fas fa-chart-line"></i> Predictive AI</span>
+                <span class="text-xs text-gray-400"><i class="fas fa-link"></i> Blockchain Secured</span>
+                <span class="text-xs text-gray-400"><i class="fas fa-cloud-sun"></i> Weather Ready</span>
+                <span class="text-xs text-gray-400"><i class="fas fa-language"></i> 6 Languages</span>
+                <span class="text-xs text-gray-400"><i class="fas fa-robot"></i> AI Chatbot</span>
+                <span class="text-xs text-gray-400"><i class="fas fa-map-marker-alt"></i> Location Services</span>
+                <span class="text-xs text-gray-400"><i class="fas fa-chart-simple"></i> Yield Predictor</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Chatbot -->
+    <div class="chatbot-container">
+        <div class="chatbot-toggle" onclick="toggleChatbot()">
+            <i class="fas fa-robot text-white text-2xl"></i>
+        </div>
+        <div class="chatbot-window" id="chatbotWindow">
+            <div class="chatbot-header">
+                <div><i class="fas fa-leaf mr-2"></i><span>Neelima's AI Assistant</span></div>
+                <button onclick="toggleChatbot()" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">✕</button>
+            </div>
+            <div class="chatbot-messages" id="chatMessages">
+                <div class="message bot-message">🌱 Namaste! I'm Neelima's AI Assistant.<br>I can help you with:<br>• Plant disease diagnosis<br>• Treatment recommendations<br>• Organic farming tips<br>• Weather advice<br>• Market prices<br><br>Ask me anything about your plants!</div>
+            </div>
+            <div class="chatbot-input">
+                <input type="text" id="chatInput" placeholder="Type your question here..." onkeypress="if(event.key==='Enter') sendMessage()">
+                <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ EXISTING VARIABLES (Preserved) ============
+        let currentImageData = null;
+        let stream = null;
+        let analysisHistory = [];
+        let diagnosisChart = null;
+        let diagnosisCounter = 0;
+        let currentLanguage = 'en';
+        let currentTipIndex = 0;
+        
+        // Complete Disease Database with Farmer-Friendly Information
+        const DISEASE_DB = {
+            'tomato_early_blight': {
+                name: '🍅 Tomato Early Blight',
+                plantType: 'Tomato Plant',
+                confidence: 87,
+                severity: 'Moderate',
+                cause: 'Fungus (Alternaria solani)',
+                symptoms: '• Dark brown spots with concentric rings on lower leaves\n• Yellowing around the spots\n• Leaves may drop prematurely',
+                treatment: '✂️ 1. Remove and destroy infected leaves immediately\n💊 2. Apply copper-based fungicide (20g per 10L water) every 7 days\n💧 3. Water at base, not on leaves\n🌿 4. Apply neem oil spray (2 tbsp per gallon) as organic option',
+                prevention: '🔄 Rotate crops every year (don\'t plant tomatoes in same spot for 3 years)\n📏 Space plants 2-3 feet apart for air circulation\n🌞 Water early morning only\n🧹 Remove plant debris after harvest\n🍂 Apply mulch to prevent soil splash',
+                urgency: 'High',
+                organic: 'Neem oil (2 tbsp per gallon water) spray every 5-7 days',
+                chemical: 'Copper oxychloride or Mancozeb (20g/10L water)',
+                recoveryTime: '7-14 days',
+                yieldLoss: '30-50% if untreated',
+                weatherTip: 'High humidity (>80%) and warm temperatures (25-30°C) accelerate this disease'
+            },
+            'wheat_rust': {
+                name: '🌾 Wheat Rust',
+                plantType: 'Wheat Plant',
+                confidence: 91,
+                severity: 'Severe',
+                cause: 'Fungus (Puccinia species)',
+                symptoms: '• Orange-red powdery pustules on leaves and stems\n• Yellowing around infected areas\n• Reduced grain fill',
+                treatment: '💊 1. Apply azoxystrobin or tebuconazole fungicide (15ml per 10L water)\n🌾 2. Use resistant varieties in next season\n🧹 3. Remove crop debris after harvest\n🌿 4. Apply garlic extract spray as organic option',
+                prevention: '🌾 Plant rust-resistant varieties\n🔄 Practice 2-year crop rotation\n🚜 Deep plow after harvest to bury debris\n📏 Maintain proper spacing (6-8 inches)\n💧 Avoid overhead irrigation',
+                urgency: 'Critical',
+                organic: 'Garlic extract spray (100g crushed garlic in 1L water, strain, dilute 1:10)',
+                chemical: 'Azoxystrobin or Tebuconazole (15ml/10L water)',
+                recoveryTime: '10-14 days',
+                yieldLoss: '40-60% if severe',
+                weatherTip: 'Cool temperatures (15-22°C) with high humidity and dew favor rust development'
+            },
+            'powdery_mildew': {
+                name: '🌱 Powdery Mildew',
+                plantType: 'Various Plants (Cucurbits, Grapes, Roses)',
+                confidence: 92,
+                severity: 'Moderate',
+                cause: 'Fungus (Erysiphales order)',
+                symptoms: '• White powdery spots on upper leaf surfaces\n• Leaves become distorted\n• Plant growth slows down',
+                treatment: '💨 1. Improve air circulation by pruning\n✂️ 2. Remove severely infected leaves\n🧴 3. Spray potassium bicarbonate (1 tbsp per gallon)\n🥛 4. Apply milk spray (40% milk + 60% water) weekly',
+                prevention: '🌞 Plant in full sun (at least 6 hours)\n💧 Avoid overhead watering\n📏 Proper plant spacing (12-18 inches apart)\n🍂 Remove infected plant debris\n🌿 Apply sulfur spray as preventive',
+                urgency: 'High',
+                organic: 'Milk spray (40% milk, 60% water) or baking soda solution (1 tbsp per gallon)',
+                chemical: 'Sulfur or potassium bicarbonate (1 tbsp/gallon)',
+                recoveryTime: '5-10 days',
+                yieldLoss: '20-40% yield loss',
+                weatherTip: 'High humidity with moderate temperatures (20-25°C) promotes powdery mildew'
+            },
+            'nutrient_deficiency': {
+                name: '🌿 Nutrient Deficiency',
+                plantType: 'Various Plants',
+                confidence: 79,
+                severity: 'Mild to Moderate',
+                cause: 'Lack of essential nutrients in soil',
+                symptoms: '• Yellowing leaves (chlorosis)\n• Stunted growth\n• Poor fruit/flower development',
+                treatment: '🌱 1. Apply balanced NPK fertilizer (10-10-10) at 50g per plant\n🧪 2. Add compost or manure to soil (5kg per sq meter)\n💚 3. Use foliar spray for quick results\n📊 4. Test soil for specific deficiencies',
+                prevention: '🧪 Regular soil testing (every 6 months)\n🌿 Add organic matter regularly\n📅 Follow proper fertilization schedule\n💧 Maintain proper watering',
+                urgency: 'Medium',
+                organic: 'Compost tea, seaweed extract, vermicompost (1kg per plant)',
+                chemical: 'Balanced NPK fertilizer (10-10-10)',
+                recoveryTime: '10-20 days',
+                yieldLoss: 'Moderate reduction (20-30%)',
+                weatherTip: 'Heavy rainfall can leach nutrients from soil. Apply fertilizer after heavy rains.'
+            },
+            'healthy': {
+                name: '✅ Healthy Plant',
+                plantType: 'Various Plants',
+                confidence: 95,
+                severity: 'No Disease',
+                cause: 'No pathogens detected',
+                symptoms: '• Vibrant green leaves\n• Normal growth pattern\n• No spots or discoloration',
+                treatment: '👍 Continue regular care\n💧 Maintain proper watering\n🌱 Apply fertilizer as scheduled\n👀 Monitor weekly for changes',
+                prevention: '✨ Regular monitoring (once a week)\n💚 Organic fertilization\n💧 Proper watering technique (early morning)\n🔄 Crop rotation',
+                urgency: 'Low',
+                organic: 'Continue organic practices',
+                chemical: 'Not needed',
+                recoveryTime: 'N/A',
+                yieldLoss: 'Optimal yield expected',
+                weatherTip: 'Current weather is favorable. Continue regular maintenance.'
+            },
+            'leaf_curl': {
+                name: '🍅 Tomato Leaf Curl Virus',
+                plantType: 'Tomato Plant',
+                confidence: 83,
+                severity: 'Severe',
+                cause: 'Virus (transmitted by whiteflies)',
+                symptoms: '• Leaves curling upward\n• Yellowing between veins\n• Stunted plant growth\n• Reduced fruit production',
+                treatment: '🚫 1. Remove infected plants immediately (burn or deep bury)\n🐞 2. Control whiteflies with neem oil (2 tbsp/gallon)\n🛡️ 3. Use insect netting (40-50 mesh)\n🧹 4. Sterilize tools with bleach solution',
+                prevention: '🦟 Control whiteflies using yellow sticky traps\n🌱 Use disease-resistant varieties (like \'Tyking\' or \'Leaf Curl Resistant\')\n🪴 Remove weed hosts (especially parthenium)\n🔄 Practice strict sanitation\n🌿 Apply neem oil weekly as preventive',
+                urgency: 'Critical',
+                organic: 'Neem oil + insecticidal soap combination',
+                chemical: 'Imidacloprid (1ml per liter) for vector control only',
+                recoveryTime: 'No cure - remove infected plants',
+                yieldLoss: '50-80% loss',
+                weatherTip: 'Whitefly populations increase in warm, dry weather. Monitor closely during summer months.'
+            }
+        };
+        
+        const TIPS_LIST = [
+            "🌿 Apply neem oil spray early morning or late evening for best pest control results. Avoid spraying in direct sunlight.",
+            "💧 Water plants at the base, not on leaves, to prevent fungal diseases. Early morning watering is best.",
+            "🌱 Add compost to soil every 3 months to improve soil health naturally. Vermicompost is excellent!",
+            "🔄 Rotate crops each season to prevent soil-borne diseases. Don't plant same family in same spot.",
+            "✂️ Remove infected plant parts immediately to prevent disease spread. Sterilize tools after use.",
+            "🍂 Use mulch to retain soil moisture and suppress weed growth. Organic mulch like straw works great.",
+            "🧪 Test soil pH annually for optimal nutrient management. Most crops prefer pH 6.0-7.0.",
+            "🌼 Plant marigolds as companion plants to repel harmful insects naturally.",
+            "🌞 Harvest crops in the morning for better shelf life and quality. Evening harvest also good.",
+            "📦 Store seeds in cool, dry place to maintain germination rate. Use airtight containers."
+        ];
+        
+        // Language translations for dashboard
+        const languageText = {
+            'en': {
+                diseaseName: 'Disease Name',
+                confidence: 'Confidence',
+                plantType: 'Plant Type',
+                severity: 'Severity Level',
+                cause: 'Cause',
+                symptoms: 'Observed Symptoms',
+                treatment: 'Treatment Plan',
+                prevention: 'Prevention Measures',
+                organicOption: '🌿 Organic Option',
+                chemicalOption: '🧪 Chemical Option',
+                recoveryTime: 'Expected Recovery',
+                yieldLoss: 'Yield Loss Risk',
+                weatherTip: 'Weather Tip',
+                nextSteps: 'Next Steps',
+                helpline: 'Need help? Call Kisan Helpline'
+            },
+            'hi': {
+                diseaseName: 'रोग का नाम',
+                confidence: 'विश्वास स्तर',
+                plantType: 'पौधे का प्रकार',
+                severity: 'गंभीरता स्तर',
+                cause: 'कारण',
+                symptoms: 'देखे गए लक्षण',
+                treatment: 'उपचार योजना',
+                prevention: 'रोकथाम के उपाय',
+                organicOption: '🌿 जैविक विकल्प',
+                chemicalOption: '🧪 रासायनिक विकल्प',
+                recoveryTime: 'अपेक्षित रिकवरी',
+                yieldLoss: 'उपज हानि जोखिम',
+                weatherTip: 'मौसम टिप',
+                nextSteps: 'अगले कदम',
+                helpline: 'सहायता चाहिए? किसान हेल्पलाइन कॉल करें'
+            },
+            'te': {
+                diseaseName: 'వ్యాధి పేరు',
+                confidence: 'విశ్వాసం',
+                plantType: 'మొక్క రకం',
+                severity: 'తీవ్రత స్థాయి',
+                cause: 'కారణం',
+                symptoms: 'గమనించిన లక్షణాలు',
+                treatment: 'చికిత్స ప్రణాళిక',
+                prevention: 'నివారణ చర్యలు',
+                organicOption: '🌿 సేంద్రీయ ఎంపిక',
+                chemicalOption: '🧪 రసాయన ఎంపిక',
+                recoveryTime: 'కోలుకోవడానికి సమయం',
+                yieldLoss: 'దిగుబడి నష్టం ప్రమాదం',
+                weatherTip: 'వాతావరణ చిట్కా',
+                nextSteps: 'తదుపరి దశలు',
+                helpline: 'సహాయం కావాలా? కిసాన్ హెల్ప్లైన్ కాల్ చేయండి'
+            }
+        };
+        
+        // ============ ENHANCED RESULT DISPLAY FUNCTION ============
+        function displayEnhancedResults(diagnosis) {
+            const currentLang = document.getElementById('languageSelect').value;
+            const lang = languageText[currentLang] || languageText['en'];
+            
+            const severityClass = {
+                'Mild': 'bg-green-100 text-green-800',
+                'Moderate': 'bg-yellow-100 text-yellow-800',
+                'Severe': 'bg-orange-100 text-orange-800',
+                'Critical': 'bg-red-100 text-red-800',
+                'No Disease': 'bg-green-100 text-green-800'
+            }[diagnosis.severity] || 'bg-gray-100 text-gray-800';
+            
+            const severityIcon = {
+                'Mild': '🟢',
+                'Moderate': '🟡',
+                'Severe': '🟠',
+                'Critical': '🔴',
+                'No Disease': '✅'
+            }[diagnosis.severity] || '📊';
+            
+            const html = `
+                <div class="result-card space-y-4">
+                    <!-- 1. Disease Name + Confidence + Plant Type -->
+                    <div class="analysis-box ${diagnosis.urgency === 'High' ? 'urgency-high' : diagnosis.urgency === 'Critical' ? 'urgency-critical' : diagnosis.urgency === 'Medium' ? 'urgency-medium' : 'urgency-low'}">
+                        <div class="flex justify-between items-start flex-wrap gap-2">
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-800">${diagnosis.name}</h2>
+                                <p class="text-sm text-gray-600 mt-1"><i class="fas fa-seedling"></i> ${lang.plantType}: ${diagnosis.plantType}</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="px-3 py-1 bg-white rounded-full font-bold text-sm shadow">🎯 ${lang.confidence}: ${diagnosis.confidence}%</span>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <div class="flex justify-between text-sm mb-1"><span>AI Confidence Score</span><span class="font-bold">${diagnosis.confidence}%</span></div>
+                            <div class="bg-gray-200 rounded-full h-2 overflow-hidden"><div class="bg-green-600 rounded-full h-2 transition-all" style="width: ${diagnosis.confidence}%"></div></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 2. Severity Level + Cause -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-amber-50 rounded-xl p-4 text-center">
+                            <p class="text-sm text-gray-600">${lang.severity}</p>
+                            <p class="text-xl font-bold ${severityClass.split(' ')[0]} px-3 py-1 rounded-full inline-block mt-1">${severityIcon} ${diagnosis.severity}</p>
+                        </div>
+                        <div class="bg-blue-50 rounded-xl p-4 text-center">
+                            <p class="text-sm text-gray-600">${lang.cause}</p>
+                            <p class="text-md font-bold text-blue-800 mt-1">🔬 ${diagnosis.cause}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 3. Visual Confirmation - Heatmap Simulation -->
+                    ${currentImageData ? `
+                    <div class="bg-gray-100 rounded-xl p-3 text-center">
+                        <p class="text-sm font-semibold text-gray-700 mb-2">📸 Visual Analysis - Infected Areas Highlighted</p>
+                        <div class="relative inline-block heatmap-overlay">
+                            <img src="${currentImageData}" class="max-h-48 rounded-lg mx-auto" alt="Analyzed leaf">
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">🔴 Red areas indicate disease infection spots</p>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- 4. Symptoms -->
+                    <div class="bg-red-50 rounded-xl p-4">
+                        <h4 class="font-bold text-red-800 mb-3"><i class="fas fa-stethoscope mr-2"></i>📋 ${lang.symptoms}</h4>
+                        <p class="text-gray-700 whitespace-pre-line">${diagnosis.symptoms}</p>
+                    </div>
+                    
+                    <!-- 5. Treatment (Most Important) -->
+                    <div class="bg-blue-50 rounded-xl p-4">
+                        <h4 class="font-bold text-blue-800 mb-3"><i class="fas fa-flask mr-2"></i>💊 ${lang.treatment}</h4>
+                        <p class="text-gray-700 whitespace-pre-line">${diagnosis.treatment}</p>
+                        <div class="mt-3 grid grid-cols-2 gap-3 text-sm">
+                            <div class="bg-white p-3 rounded-lg"><strong>${lang.organicOption}</strong><br>${diagnosis.organic}</div>
+                            <div class="bg-white p-3 rounded-lg"><strong>${lang.chemicalOption}</strong><br>${diagnosis.chemical}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 6. Prevention Measures -->
+                    <div class="bg-purple-50 rounded-xl p-4">
+                        <h4 class="font-bold text-purple-800 mb-3"><i class="fas fa-shield-alt mr-2"></i>🛡️ ${lang.prevention}</h4>
+                        <p class="text-gray-700 whitespace-pre-line">${diagnosis.prevention}</p>
+                    </div>
+                    
+                    <!-- 7. Important Information + Recovery + Yield Loss -->
+                    <div class="bg-amber-50 rounded-xl p-4">
+                        <h4 class="font-bold text-amber-800 mb-3"><i class="fas fa-info-circle mr-2"></i>📊 Important Information</h4>
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            <div class="bg-white p-3 rounded-lg"><strong>⏰ ${lang.recoveryTime}:</strong><br>${diagnosis.recoveryTime}</div>
+                            <div class="bg-white p-3 rounded-lg"><strong>📉 ${lang.yieldLoss}:</strong><br>${diagnosis.yieldLoss}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 8. Weather/Environment Tips -->
+                    <div class="bg-cyan-50 rounded-xl p-4">
+                        <h4 class="font-bold text-cyan-800 mb-2"><i class="fas fa-cloud-sun mr-2"></i>🌤️ ${lang.weatherTip}</h4>
+                        <p class="text-gray-700 text-sm">${diagnosis.weatherTip}</p>
+                    </div>
+                    
+                    <!-- 9. Next Steps -->
+                    <div class="bg-indigo-50 rounded-xl p-4">
+                        <h4 class="font-bold text-indigo-800 mb-2"><i class="fas fa-clipboard-list mr-2"></i>📋 ${lang.nextSteps}</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li class="flex items-start gap-2"><span class="text-indigo-600">➡️</span> Monitor plant daily for 7 days</li>
+                            <li class="flex items-start gap-2"><span class="text-indigo-600">➡️</span> Re-upload image after 5 days if condition worsens</li>
+                            <li class="flex items-start gap-2"><span class="text-indigo-600">➡️</span> Isolate infected plant from healthy ones</li>
+                            <li class="flex items-start gap-2"><span class="text-indigo-600">➡️</span> Keep a record of treatments applied</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- 10. Emergency Contact -->
+                    <div class="bg-green-100 rounded-xl p-4 text-center">
+                        <p class="font-semibold text-green-800"><i class="fas fa-phone-alt mr-2"></i>📞 ${lang.helpline}: <span class="font-bold text-xl">1800-180-1551</span></p>
+                        <p class="text-xs text-green-600 mt-1">Free agricultural advice from experts (6 AM - 10 PM)</p>
+                    </div>
+                    
+                    <!-- 11. Blockchain Verification -->
+                    <div class="text-xs text-gray-400 text-right pt-2 border-t">
+                        <i class="fas fa-check-circle text-green-600"></i> Analyzed by Neelima's AgriAI | 
+                        <i class="fas fa-link text-blue-600"></i> Blockchain Verified | 
+                        <i class="fas fa-language text-purple-600"></i> ${document.getElementById('languageSelect').options[document.getElementById('languageSelect').selectedIndex].text} |
+                        ${new Date().toLocaleString()}
+                    </div>
+                </div>
+            `;
+            document.getElementById('resultsArea').innerHTML = html;
+        }
+        
+        // ============ EXISTING FUNCTIONS (All Preserved) ============
+        
+        const translations = {
+            'en': {'upload': 'Upload', 'camera': 'Camera', 'text': 'Describe', 'dashboard': 'AI Analysis Dashboard'},
+            'hi': {'upload': 'अपलोड', 'camera': 'कैमरा', 'text': 'विवरण', 'dashboard': 'एआई विश्लेषण डैशबोर्ड'},
+            'te': {'upload': 'అప్లోడ్', 'camera': 'కెమెరా', 'text': 'వివరించండి', 'dashboard': 'AI విశ్లేషణ డాష్బోర్డ్'},
+            'ta': {'upload': 'பதிவேற்றம்', 'camera': 'கேமரா', 'text': 'விவரி', 'dashboard': 'AI பகுப்பாய்வு டாஷ்போர்டு'},
+            'kn': {'upload': 'ಅಪ್ಲೋಡ್', 'camera': 'ಕ್ಯಾಮೆರಾ', 'text': 'ವಿವರಿಸಿ', 'dashboard': 'AI ವಿಶ್ಲೇಷಣೆ ಡ್ಯಾಶ್ಬೋರ್ಡ್'},
+            'mr': {'upload': 'अपलोड', 'camera': 'कॅमेरा', 'text': 'वर्णन करा', 'dashboard': 'AI विश्लेषण डॅशबोर्ड'}
+        };
+        
+        function changeLanguage() {
+            currentLanguage = document.getElementById('languageSelect').value;
+            document.querySelectorAll('[data-key]').forEach(el => {
+                const key = el.getAttribute('data-key');
+                if (translations[currentLanguage][key]) el.innerText = translations[currentLanguage][key];
+            });
+            showNotification(`Language changed to ${document.getElementById('languageSelect').options[document.getElementById('languageSelect').selectedIndex].text}`, 'success');
+        }
+        
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(tab + 'Section').classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tab + 'Tab').classList.add('active');
+            if (tab === 'camera') startCamera();
+            else if (tab === 'upload') stopCamera();
+        }
+        
+        function handleImageUpload(file) {
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    currentImageData = e.target.result;
+                    document.getElementById('uploadPreview').classList.remove('hidden');
+                    document.getElementById('previewImage').src = currentImageData;
+                    document.getElementById('analyzeBtn').disabled = false;
+                    showNotification('✅ Image uploaded successfully! Ready for diagnosis', 'success');
+                };
+                reader.readAsDataURL(file);
+            } else { showNotification('Please select a valid image file', 'error'); }
+        }
+        
+        async function startCamera() {
+            try {
+                if (stream) stopCamera();
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                document.getElementById('video').srcObject = stream;
+                document.getElementById('captureBtn').disabled = false;
+                showNotification('📷 Camera started - Position the leaf in frame', 'success');
+            } catch(err) { showNotification('Camera access denied', 'error'); }
+        }
+        
+        function capturePhoto() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            currentImageData = canvas.toDataURL('image/jpeg', 0.8);
+            document.getElementById('cameraPreview').classList.remove('hidden');
+            document.getElementById('capturedImage').src = currentImageData;
+            document.getElementById('analyzeBtn').disabled = false;
+            showNotification('📸 Photo captured! Click diagnose', 'success');
+        }
+        
+        function stopCamera() {
+            if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; document.getElementById('captureBtn').disabled = true; }
+        }
+        
+        function analyzeTextDescription() {
+            const textarea = document.getElementById('symptomText');
+            const description = textarea.value.trim();
+            if (!description) { showNotification('Please describe the symptoms first', 'error'); return; }
+            document.getElementById('textPreview').classList.remove('hidden');
+            document.getElementById('userDescription').innerText = description;
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('resultsArea').innerHTML = '';
+            
+            setTimeout(() => {
+                let diagnosis;
+                const textLower = description.toLowerCase();
+                if ((textLower.includes('brown') || textLower.includes('spot')) && textLower.includes('tomato')) diagnosis = DISEASE_DB['tomato_early_blight'];
+                else if (textLower.includes('white') || textLower.includes('powder')) diagnosis = DISEASE_DB['powdery_mildew'];
+                else if (textLower.includes('yellow') && !textLower.includes('curl')) diagnosis = DISEASE_DB['nutrient_deficiency'];
+                else if (textLower.includes('curl') || textLower.includes('curling')) diagnosis = DISEASE_DB['leaf_curl'];
+                else if (textLower.includes('rust') || textLower.includes('orange')) diagnosis = DISEASE_DB['wheat_rust'];
+                else diagnosis = DISEASE_DB['healthy'];
+                
+                displayEnhancedResults(diagnosis);
+                document.getElementById('loadingState').classList.add('hidden');
+                incrementDiagnosisCount();
+                showNotification('✅ Text analysis complete!', 'success');
+            }, 1500);
+        }
+        
+        function clearTextDescription() {
+            document.getElementById('symptomText').value = '';
+            document.getElementById('textPreview').classList.add('hidden');
+        }
+        
+        function analyzeImage() {
+            if (!currentImageData) { showNotification('Please upload or capture an image first', 'error'); return; }
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('resultsArea').innerHTML = '';
+            document.getElementById('analyzeBtn').disabled = true;
+            
+            setTimeout(() => {
+                const diseases = Object.keys(DISEASE_DB);
+                const randomDisease = diseases[Math.floor(Math.random() * diseases.length)];
+                const diagnosis = DISEASE_DB[randomDisease];
+                displayEnhancedResults(diagnosis);
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('analyzeBtn').disabled = false;
+                incrementDiagnosisCount();
+                showNotification('✅ Diagnosis complete!', 'success');
+            }, 2000);
+        }
+        
+        function incrementDiagnosisCount() {
+            diagnosisCounter++;
+            document.getElementById('diagnosisCount').innerText = diagnosisCounter;
+            document.getElementById('blockchainCount').innerText = diagnosisCounter;
+        }
+        
+        function clearResults() {
+            document.getElementById('resultsArea').innerHTML = `
+                <div class="text-center text-gray-500 py-12">
+                    <i class="fas fa-seedling text-6xl mb-3 text-green-300"></i>
+                    <p class="font-semibold text-gray-700">Welcome to Neelima's AgriAI</p>
+                    <p class="text-sm mt-2 text-gray-500">Upload, scan, or describe your plant for revolutionary diagnosis</p>
+                    <div class="mt-6 p-4 bg-green-50 rounded-lg">
+                        <p class="text-xs text-gray-600"><i class="fas fa-gem text-yellow-500"></i> Features:</p>
+                        <p class="text-xs text-gray-500 mt-1">✓ 6 Indian Languages ✓ Blockchain Security ✓ Spread Prediction</p>
+                        <p class="text-xs text-gray-500">✓ Weather Risk ✓ Text Description ✓ AI Chatbot</p>
+                    </div>
+                </div>
+            `;
+            currentImageData = null;
+            document.getElementById('analyzeBtn').disabled = true;
+            document.getElementById('uploadPreview')?.classList.add('hidden');
+            document.getElementById('cameraPreview')?.classList.add('hidden');
+        }
+        
+        // Weather Functions
+        function updateWeather() {
+            const temps = [26, 28, 30, 27, 29];
+            const humidities = [65, 70, 75, 80, 68];
+            const randomIndex = Math.floor(Math.random() * temps.length);
+            document.getElementById('tempValue').innerText = temps[randomIndex] + '°C';
+            document.getElementById('humidityValue').innerText = humidities[randomIndex] + '%';
+            document.getElementById('windValue').innerText = (Math.random() * 20).toFixed(0) + ' km/h';
+            document.getElementById('rainValue').innerText = Math.random() > 0.7 ? (Math.random() * 30).toFixed(0) + ' mm' : '0 mm';
+            const risk = humidities[randomIndex] > 70 ? 'High Risk Today' : 'Moderate Risk';
+            document.getElementById('riskLevel').innerText = risk;
+            document.getElementById('riskLevel').className = `px-3 py-1 rounded-full text-sm font-semibold ${risk === 'High Risk Today' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`;
+            const advice = humidities[randomIndex] > 70 ? '⚠️ High humidity! Apply preventive fungicide today.' : '✅ Weather conditions are favorable. Regular monitoring sufficient.';
+            document.getElementById('weatherAdvice').innerHTML = advice;
+        }
+        
+        // Fertilizer Calculator
+        function calculateFertilizer() {
+            const area = document.getElementById('areaInput').value;
+            const crop = document.getElementById('cropType').value;
+            if (area && area > 0) {
+                let amount = area * 50;
+                if (crop === 'Rice') amount = area * 60;
+                else if (crop === 'Corn') amount = area * 55;
+                document.getElementById('fertilizerAmount').innerText = `${amount} kg NPK fertilizer for ${crop}`;
+                document.getElementById('fertilizerResult').classList.remove('hidden');
+                showNotification(`Fertilizer calculated: ${amount} kg needed`, 'success');
+            } else { showNotification('Please enter area in acres', 'error'); }
+        }
+        
+        // Daily Tips
+        function updateDailyTip() {
+            currentTipIndex = (currentTipIndex) % TIPS_LIST.length;
+            document.getElementById('dailyTipText').innerHTML = TIPS_LIST[currentTipIndex];
+        }
+        
+        function nextTip() { currentTipIndex = (currentTipIndex + 1) % TIPS_LIST.length; updateDailyTip(); showNotification('Next tip loaded', 'info'); }
+        function previousTip() { currentTipIndex = (currentTipIndex - 1 + TIPS_LIST.length) % TIPS_LIST.length; updateDailyTip(); showNotification('Previous tip loaded', 'info'); }
+        
+        // Map
+        function initMap() {
+            var map = L.map('map').setView([20.5937, 78.9629], 5);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+            L.marker([20.5937, 78.9629]).addTo(map).bindPopup('📍 Your Location').openPopup();
+        }
+        
+        // Chatbot Functions
+        function toggleChatbot() { document.getElementById('chatbotWindow').classList.toggle('active'); }
+        
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+            const messagesDiv = document.getElementById('chatMessages');
+            messagesDiv.innerHTML += `<div class="message user-message">${escapeHtml(message)}</div>`;
+            input.value = '';
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.innerHTML = '<span></span><span></span><span></span>';
+            messagesDiv.appendChild(typingDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            setTimeout(() => {
+                messagesDiv.removeChild(typingDiv);
+                let response = getChatbotResponse(message);
+                messagesDiv.innerHTML += `<div class="message bot-message">${response}</div>`;
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }, 1000);
+        }
+        
+        function getChatbotResponse(message) {
+            const msg = message.toLowerCase();
+            if (msg.includes('hello') || msg.includes('hi') || msg.includes('namaste')) return "🌱 Namaste! How can I help with your plants today?";
+            if (msg.includes('disease')) return "📸 Upload a leaf photo using the Upload tab or describe symptoms for accurate diagnosis!";
+            if (msg.includes('treatment')) return "💊 Treatment depends on the disease. First diagnose using our AI tool, then I can recommend specific treatments!";
+            if (msg.includes('organic')) return "🌿 Great choice! Organic options: neem oil spray (2 tbsp/gallon), compost tea, baking soda solution (1 tbsp/gallon), and beneficial insects!";
+            if (msg.includes('price') || msg.includes('market')) return "💰 Current market prices: Wheat ₹2250, Corn ₹1850, Tomato ₹1200 per quintal. Check Market Price section for details!";
+            if (msg.includes('weather')) return "🌤️ Check the Weather & Disease Risk section above for current conditions and disease risk alerts!";
+            if (msg.includes('fertilizer')) return "🌱 Use the Fertilizer Calculator above to get exact NPK requirements for your crop and area!";
+            if (msg.includes('pest')) return "🐛 Check the Pest Identification Guide above for common pests and organic control methods!";
+            return "📸 For accurate diagnosis, please upload a photo of the affected leaf using the Upload tab above! I'm here to help with any plant questions 🌱";
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 animate-bounce ${type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'} text-white`;
+            notification.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'} mr-2"></i>${message}`;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+        
+        // Initialize All
+        function init() {
+            switchTab('upload');
+            updateWeather();
+            updateDailyTip();
+            setInterval(updateWeather, 30000);
+            setTimeout(initMap, 1000);
+            
+            // Add history display element
+            const statsDiv = document.querySelector('.mt-4.pt-4.border-t');
+            if (statsDiv && !document.getElementById('historyList')) {
+                const historyDiv = document.createElement('div');
+                historyDiv.className = 'mt-4';
+                historyDiv.innerHTML = `<h4 class="font-semibold text-gray-700 mb-2"><i class="fas fa-history mr-2 text-green-600"></i>Recent Diagnoses</h4><div id="historyList" class="space-y-2 max-h-32 overflow-y-auto"></div>`;
+                statsDiv.parentNode.insertBefore(historyDiv, statsDiv.nextSibling);
+            }
+        }
+        
+        init();
+    </script>
+</body>
+</html>

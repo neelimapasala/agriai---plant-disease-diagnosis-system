@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Disease AI - Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        button {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            background: #45a049;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #28a745;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #dc3545;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #17a2b8;
+        }
+        h1 {
+            color: #2e7d32;
+        }
+        .status {
+            font-size: 14px;
+            color: #666;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌱 Plant Disease AI System</h1>
+        <h3>Backend Connection Test</h3>
+        
+        <button onclick="testBackend()">
+            🧪 Test Backend Connection
+        </button>
+        
+        <button onclick="testDiagnose()">
+            🔬 Test Diagnosis API
+        </button>
+        
+        <button onclick="checkHealth()">
+            💓 Check Server Health
+        </button>
+        
+        <div id="result"></div>
+        
+        <div class="status">
+            <strong>Status:</strong> 
+            <span id="serverStatus">⚠️ Not tested yet</span>
+            <br><br>
+            <strong>Instructions:</strong><br>
+            1. Make sure backend is running: <code>python app.py</code><br>
+            2. Backend should be on: <code>http://localhost:5000</code><br>
+            3. Click buttons above to test
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+        
+        async function checkHealth() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="info">🔄 Checking server health...</div>';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ <strong>Server is healthy!</strong><br>
+                            Status: ${data.status}<br>
+                            Message: ${data.message || 'Plant Disease AI is running'}<br>
+                            Time: ${data.timestamp || new Date().toLocaleString()}
+                        </div>
+                    `;
+                    document.getElementById('serverStatus').innerHTML = '✅ Connected';
+                    document.getElementById('serverStatus').style.color = 'green';
+                } else {
+                    throw new Error('Server returned error');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ <strong>Cannot connect to backend!</strong><br>
+                        Error: ${error.message}<br><br>
+                        Make sure you have started the backend server:<br>
+                        <code>python app.py</code>
+                    </div>
+                `;
+                document.getElementById('serverStatus').innerHTML = '❌ Not connected';
+                document.getElementById('serverStatus').style.color = 'red';
+            }
+        }
+        
+        async function testBackend() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="info">🔄 Testing connection...</div>';
+            
+            try {
+                // First check if server is reachable
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                
+                const response = await fetch(`${API_URL}/api/health`, {
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ <strong>Backend Connection Successful!</strong><br><br>
+                            📍 Server URL: ${API_URL}<br>
+                            🔧 Status: ${data.status}<br>
+                            🚀 Everything is working!<br><br>
+                            You can now open <strong>index.html</strong> to use the full application.
+                        </div>
+                    `;
+                    document.getElementById('serverStatus').innerHTML = '✅ Connected';
+                    document.getElementById('serverStatus').style.color = 'green';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ <strong>Backend Connection Failed!</strong><br><br>
+                        Error: ${error.message}<br><br>
+                        <strong>Solutions:</strong><br>
+                        1. Open terminal in VS Code<br>
+                        2. Run: <code>python app.py</code><br>
+                        3. Make sure you see "Starting server..." message<br>
+                        4. Keep the terminal running<br>
+                        5. Refresh this page and test again
+                    </div>
+                `;
+                document.getElementById('serverStatus').innerHTML = '❌ Not connected';
+                document.getElementById('serverStatus').style.color = 'red';
+            }
+        }
+        
+        async function testDiagnose() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="info">🔄 Testing diagnosis API...</div>';
+            
+            try {
+                // Create a simple test image (1x1 pixel)
+                const testImage = await createTestImage();
+                
+                const formData = new FormData();
+                formData.append('image', testImage, 'test.jpg');
+                
+                const response = await fetch(`${API_URL}/api/diagnose`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ <strong>Diagnosis API is working!</strong><br><br>
+                            📊 Response: ${JSON.stringify(data.ai_analysis, null, 2)}<br><br>
+                            🎉 Your AI system is fully functional!
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.error || 'Diagnosis failed');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ <strong>Diagnosis API Error!</strong><br><br>
+                        Error: ${error.message}<br><br>
+                        Make sure backend is running and accepting images.
+                    </div>
+                `;
+            }
+        }
+        
+        async function createTestImage() {
+            // Create a simple canvas with green color (simulating a leaf)
+            const canvas = document.createElement('canvas');
+            canvas.width = 224;
+            canvas.height = 224;
+            const ctx = canvas.getContext('2d');
+            
+            // Draw a simple leaf shape
+            ctx.fillStyle = '#4caf50';
+            ctx.fillRect(0, 0, 224, 224);
+            ctx.fillStyle = '#2e7d32';
+            ctx.beginPath();
+            ctx.moveTo(112, 50);
+            ctx.quadraticCurveTo(160, 112, 112, 174);
+            ctx.quadraticCurveTo(64, 112, 112, 50);
+            ctx.fill();
+            
+            // Convert to blob
+            return new Promise((resolve) => {
+                canvas.toBlob((blob) => {
+                    resolve(blob);
+                }, 'image/jpeg');
+            });
+        }
+        
+        // Auto-test on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                checkHealth();
+            }, 500);
+        });
+    </script>
+</body>
+</html>
